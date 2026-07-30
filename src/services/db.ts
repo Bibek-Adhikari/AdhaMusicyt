@@ -106,13 +106,9 @@ export async function getAllOfflineSongs(): Promise<{ song: Song; blobUrl: strin
       req.onsuccess = () => {
         const records: OfflineSongRecord[] = req.result || [];
         const result = records.map((rec) => {
-          const blobUrl = URL.createObjectURL(rec.audioBlob);
           return {
-            song: {
-              ...rec.song,
-              audioUrl: blobUrl
-            },
-            blobUrl
+            song: { ...rec.song },
+            blobUrl: ''
           };
         });
         resolve(result);

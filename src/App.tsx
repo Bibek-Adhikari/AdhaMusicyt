@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Song, PlaybackState, RepeatMode } from './types';
+import { Song, RepeatMode } from './types';
 import { INITIAL_SONGS } from './data/songs';
 import { 
   getAllOfflineSongs, 
@@ -24,6 +24,7 @@ import { LyriaStudioModal } from './components/LyriaStudioModal';
 export default function App() {
   // Audio state
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const currentBlobUrlRef = useRef<string | null>(null);
   
   // Library State
   const [songs, setSongs] = useState<Song[]>(INITIAL_SONGS);
@@ -97,6 +98,9 @@ export default function App() {
       audio.removeEventListener('pause', handlePause);
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      if (currentBlobUrlRef.current) {
+        URL.revokeObjectURL(currentBlobUrlRef.current);
+      }
     };
   }, []);
 
@@ -145,6 +149,12 @@ export default function App() {
       if (offlineUrl) {
         playUrl = offlineUrl;
       }
+
+      // Revoke previous blob URL to prevent memory leak
+      if (currentBlobUrlRef.current && currentBlobUrlRef.current !== playUrl) {
+        URL.revokeObjectURL(currentBlobUrlRef.current);
+      }
+      currentBlobUrlRef.current = playUrl.startsWith('blob:') ? playUrl : null;
 
       audioRef.current.src = playUrl;
       audioRef.current.volume = isMuted ? 0 : volume;
@@ -298,9 +308,12 @@ export default function App() {
 
   // 6. User Custom Song Added
   const handleCustomSongAdded = (newSong: Song) => {
-    setSongs((prev) => [newSong, ...prev]);
+    setSongs((prev) => {
+      const newList = [newSong, ...prev];
+      queueMicrotask(() => playSong(newSong, newList, 0));
+      return newList;
+    });
     setOfflineSongIds((prev) => new Set(prev).add(newSong.id));
-    playSong(newSong, [newSong, ...songs], 0);
   };
 
   // 7. Filtered Songs calculation
