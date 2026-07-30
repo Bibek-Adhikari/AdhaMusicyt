@@ -1,0 +1,6 @@
+{
+  "name": "Adha Music",
+  "description": "A simple Hindi & Nepali music web app and PWA with offline playback and shuffle features.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
